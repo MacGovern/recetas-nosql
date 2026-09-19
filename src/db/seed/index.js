@@ -23,7 +23,7 @@ async function insertUsuarios(db) {
   const passwordHash = await bcrypt.hash(SEED_PASSWORD, 10);
   const docs = usuarios.map((u) => ({
     nombre: u.nombre,
-    email: u.email,
+    email: u.email.toLowerCase(),
     passwordHash,
     rol: u.rol,
     fechaRegistro: daysAgo(u.fechaRegistroDiasAtras),

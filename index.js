@@ -2,11 +2,16 @@ const express = require('express');
 const path = require('path');
 const { connect, getDb, close } = require('./src/db/connection');
 const { port } = require('./src/config/env');
+const sessionMiddleware = require('./src/middleware/session.middleware');
+const authRoutes = require('./src/routes/auth.routes');
 
 const app = express();
 
 app.use(express.json());
+app.use(sessionMiddleware);
 app.use(express.static(path.join(__dirname, 'src/public'))); // vacío hasta la Etapa 6
+
+app.use('/api/auth', authRoutes);
 
 app.get('/api/health', async (req, res) => {
   try {

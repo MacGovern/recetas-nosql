@@ -5,6 +5,8 @@ const { port } = require('./src/config/env');
 const sessionMiddleware = require('./src/middleware/session.middleware');
 const authRoutes = require('./src/routes/auth.routes');
 const recetasRoutes = require('./src/routes/recetas.routes');
+const opinionesRoutes = require('./src/routes/opiniones.routes');
+const usuariosRoutes = require('./src/routes/usuarios.routes');
 
 const app = express();
 
@@ -14,6 +16,8 @@ app.use(express.static(path.join(__dirname, 'src/public'))); // vacío hasta la 
 
 app.use('/api/auth', authRoutes);
 app.use('/api/recetas', recetasRoutes);
+app.use('/api/opiniones', opinionesRoutes);
+app.use('/api/usuarios', usuariosRoutes);
 
 app.get('/api/health', async (req, res) => {
   try {

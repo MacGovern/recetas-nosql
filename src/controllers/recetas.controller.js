@@ -295,4 +295,4 @@ async function eliminar(req, res) {
   }
 }
 
-module.exports = { crear, listar, obtenerPorId, actualizar, eliminar };
+module.exports = { crear, listar, obtenerPorId, actualizar, eliminar, PROYECCION_LISTADO };

@@ -8,6 +8,7 @@ const recetasRoutes = require('./src/routes/recetas.routes');
 const opinionesRoutes = require('./src/routes/opiniones.routes');
 const usuariosRoutes = require('./src/routes/usuarios.routes');
 const consultasRoutes = require('./src/routes/consultas.routes');
+const categoriasRoutes = require('./src/routes/categorias.routes');
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use('/api/recetas', recetasRoutes);
 app.use('/api/opiniones', opinionesRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/consultas', consultasRoutes);
+app.use('/api/categorias', categoriasRoutes);
 
 app.get('/api/health', async (req, res) => {
   try {

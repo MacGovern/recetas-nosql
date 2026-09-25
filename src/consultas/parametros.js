@@ -13,4 +13,20 @@ function enteroDesdeQuery(valor, porDefecto, { min = 0, max = Infinity } = {}) {
   return Math.min(Math.max(n, min), max);
 }
 
-module.exports = { listaDesdeQuery, enteroDesdeQuery };
+// Escapa los metacaracteres de regex para que el término del usuario se busque
+// como texto literal: "a.b" no debe significar "a, cualquier carácter, b".
+function escaparRegex(texto) {
+  return texto.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Regex de palabra completa, insensible a mayúsculas: "sal" matchea "sal" y
+// "sal gruesa" pero no "salsa"; "pollo" matchea "pollo entero".
+// No usa \b: en el motor de regex de Mongo (PCRE) \b solo reconoce ASCII como
+// carácter de palabra, y un término que empieza o termina con letra acentuada
+// ("ají", "café", "ñoquis") no matchearía nunca. Por eso los límites son
+// lookarounds sobre letras y dígitos Unicode.
+function regexPalabraCompleta(termino) {
+  return new RegExp(`(?<![\\p{L}\\p{N}])${escaparRegex(termino)}(?![\\p{L}\\p{N}])`, 'i');
+}
+
+module.exports = { listaDesdeQuery, enteroDesdeQuery, escaparRegex, regexPalabraCompleta };

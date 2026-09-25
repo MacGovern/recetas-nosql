@@ -5,7 +5,7 @@
 const { ObjectId } = require('mongodb');
 const { getDb } = require('../db/connection');
 const { PROYECCION_LISTADO } = require('../controllers/recetas.controller');
-const { listaDesdeQuery, enteroDesdeQuery } = require('./parametros');
+const { listaDesdeQuery, enteroDesdeQuery, regexPalabraCompleta } = require('./parametros');
 
 // El "tiempo total" no está precalculado en el modelo, así que el orden por
 // tiempo se hace por preparación.
@@ -30,7 +30,21 @@ async function buscarRecetas(req, res) {
     }
 
     const filtro = {};
-    if (ingredientes.length > 0) filtro['ingredientes.nombre'] = { $all: ingredientes };
+    // Cada término se busca como PALABRA COMPLETA, insensible a mayúsculas, y
+    // no como string exacto: con $all de strings literales, buscar "pollo" no
+    // encontraba "pollo entero". Se mantiene $all, así que la receta debe
+    // cumplir TODOS los términos; lo que cambia es que cada elemento del array
+    // pasa a ser un $regex (ver regexPalabraCompleta en parametros.js).
+    //
+    // Costo: un regex que no está anclado al inicio (y además con /i) no puede
+    // acotar un rango del índice multikey { "ingredientes.nombre": 1 }: en lugar
+    // de saltar a las claves buscadas, recorre las claves del índice (o la
+    // colección). Es irrelevante con el volumen del seed, pero queda anotado
+    // para la reflexión final del documento del grupo (la sección 5.1 usaba
+    // $all con igualdad exacta, que sí aprovechaba el índice).
+    if (ingredientes.length > 0) {
+      filtro['ingredientes.nombre'] = { $all: ingredientes.map(regexPalabraCompleta) };
+    }
     if (categorias.length > 0) filtro.categorias = { $all: categorias.map((c) => new ObjectId(c)) };
     if (typeof req.query.pais === 'string' && req.query.pais) filtro.paisOrigen = req.query.pais.toUpperCase();
     if (typeof req.query.q === 'string' && req.query.q.trim()) filtro.$text = { $search: req.query.q.trim() };

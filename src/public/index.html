@@ -9,13 +9,55 @@
 </head>
 <body>
   <nav id="nav-root"></nav>
-  <main class="container">
-    <h1 class="h3">Recetario</h1>
-    <p class="text-muted">El listado de recetas llega en la Parte B de la Etapa 6.</p>
+  <main class="container pb-5">
+    <h1 class="h3 mb-3">Recetas</h1>
+
+    <form id="form-filtros" class="card card-body mb-4" novalidate>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="q">Buscar por texto</label>
+          <input class="form-control" id="q" name="q" type="search" placeholder="Ej.: pizza">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="ingredientes">Ingredientes</label>
+          <input class="form-control" id="ingredientes" name="ingredientes" type="text" placeholder="Separados por coma: harina, sal">
+          <div class="form-text">Trae las recetas que tengan todas las palabras de ingrediente indicadas.</div>
+        </div>
+        <div class="col-6 col-md-3">
+          <label class="form-label" for="pais">País (código)</label>
+          <input class="form-control" id="pais" name="pais" type="text" maxlength="2" placeholder="IT">
+        </div>
+        <div class="col-6 col-md-4">
+          <label class="form-label" for="orden">Ordenar por</label>
+          <select class="form-select" id="orden" name="orden">
+            <option value="puntaje">Mejor puntaje</option>
+            <option value="fecha">Más recientes</option>
+            <option value="preparacion">Menor tiempo de preparación</option>
+          </select>
+        </div>
+        <div class="col-12">
+          <span class="form-label d-block">Categorías</span>
+          <div id="alertas-categorias" class="small"></div>
+          <div id="filtro-categorias"></div>
+          <div class="form-text">Trae las recetas que estén en todas las categorías marcadas.</div>
+        </div>
+      </div>
+      <div class="mt-3 d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Buscar</button>
+        <button class="btn btn-outline-secondary" type="reset">Limpiar</button>
+      </div>
+    </form>
+
+    <div id="alertas"></div>
+
+    <div id="resultados" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3"></div>
+
+    <nav id="paginacion" class="d-flex justify-content-between align-items-center mt-4" aria-label="Paginación" hidden>
+      <button type="button" class="btn btn-outline-secondary" id="btn-anterior">Anterior</button>
+      <span id="info-pagina" class="text-muted"></span>
+      <button type="button" class="btn btn-outline-secondary" id="btn-siguiente">Siguiente</button>
+    </nav>
   </main>
-  <script type="module">
-    import { iniciarNav } from '/js/nav.js';
-    iniciarNav();
-  </script>
+  <script type="module" src="/js/paginas/listado.js"></script>
 </body>
 </html>

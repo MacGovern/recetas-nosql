@@ -150,7 +150,9 @@ async function validarYArmarDatos(body) {
     tiempoCoccionMin: body.tiempoCoccionMin,
     dificultad: body.dificultad,
     categorias: categoriasIds,
-    ingredientes: body.ingredientes,
+    // Nombre en minúsculas y sin espacios sobrantes: la consulta 5 agrupa por
+    // nombre exacto, así que "Sal" y "sal" serían ingredientes distintos.
+    ingredientes: body.ingredientes.map((ing) => ({ ...ing, nombre: ing.nombre.trim().toLowerCase() })),
     pasos: body.pasos,
   };
   if (paisOrigen !== undefined) datos.paisOrigen = paisOrigen;

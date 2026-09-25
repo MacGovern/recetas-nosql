@@ -9,12 +9,14 @@ const TODOS = ['visitante', 'usuario', 'moderador', 'admin'];
 // una línea por pantalla.
 const ITEMS = [
   { texto: 'Inicio', href: '/index.html', roles: TODOS },
+  { texto: 'Nueva receta', href: '/receta-form.html', roles: ['usuario', 'moderador'] },
   { texto: 'Ingresar', href: '/login.html', roles: ['visitante'] },
   { texto: 'Registrarse', href: '/registro.html', roles: ['visitante'] },
 ];
 
-// Páginas que exigen sesión: al cerrarla se redirige a login. B y C las agregan.
-const PAGINAS_PROTEGIDAS = [];
+// Páginas que exigen sesión: un visitante que entra por URL, o que cierra sesión
+// estando en ellas, es redirigido a login. B y C las agregan.
+const PAGINAS_PROTEGIDAS = ['/receta-form.html'];
 
 // Roles con botón de cuenta/Salir, enumerados explícitamente.
 const ROLES_CON_SESION = ['usuario', 'moderador', 'admin'];
@@ -44,6 +46,10 @@ function html(estado) {
   </div>`;
 }
 
+function irALoginConNext() {
+  location.assign(`/login.html?next=${encodeURIComponent(location.pathname + location.search)}`);
+}
+
 async function salir() {
   try {
     await api.post('/api/auth/logout', {}, { redirigir401: false });
@@ -52,7 +58,7 @@ async function salir() {
   }
   limpiar();
   if (PAGINAS_PROTEGIDAS.includes(location.pathname)) {
-    location.assign(`/login.html?next=${encodeURIComponent(location.pathname + location.search)}`);
+    irALoginConNext();
   }
 }
 
@@ -62,10 +68,15 @@ function pintar(raiz, estado) {
 }
 
 // Devuelve la promesa del estado inicial para que la página espere a saber si hay sesión.
-export function iniciarNav() {
+// Si la página exige sesión y no la hay, redirige a login (con ?next= para volver).
+export async function iniciarNav() {
   const raiz = document.getElementById('nav-root');
   raiz.className = 'navbar navbar-expand navbar-dark bg-dark mb-4';
   pintar(raiz, obtener());
   suscribir((estado) => pintar(raiz, estado));
-  return iniciar();
+  const estado = await iniciar();
+  if (!estado.autenticado && PAGINAS_PROTEGIDAS.includes(location.pathname)) {
+    irALoginConNext();
+  }
+  return estado;
 }

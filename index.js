@@ -9,6 +9,8 @@ const opinionesRoutes = require('./src/routes/opiniones.routes');
 const usuariosRoutes = require('./src/routes/usuarios.routes');
 const consultasRoutes = require('./src/routes/consultas.routes');
 const categoriasRoutes = require('./src/routes/categorias.routes');
+const moderacionRoutes = require('./src/routes/moderacion.routes');
+const adminRoutes = require('./src/routes/admin.routes');
 
 const app = express();
 
@@ -22,6 +24,8 @@ app.use('/api/opiniones', opinionesRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/consultas', consultasRoutes);
 app.use('/api/categorias', categoriasRoutes);
+app.use('/api/moderacion', moderacionRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/api/health', async (req, res) => {
   try {

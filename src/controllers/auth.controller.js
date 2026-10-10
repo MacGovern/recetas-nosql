@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const { ObjectId } = require('mongodb');
 const { getDb } = require('../db/connection');
 
 const SALT_ROUNDS = 10;
@@ -19,19 +20,30 @@ function abrirSesion(req, usuario) {
   });
 }
 
-async function registrar(req, res) {
-  const nombre = typeof req.body.nombre === 'string' ? req.body.nombre.trim() : '';
-  const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
-  const password = typeof req.body.password === 'string' ? req.body.password : '';
+// Valida y normaliza nombre, email y contraseña de una cuenta nueva. La usan
+// el registro público y la alta de administradores. Devuelve { error } o
+// { nombre, email, password }.
+function validarDatosCuenta(body) {
+  const nombre = typeof body.nombre === 'string' ? body.nombre.trim() : '';
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+  const password = typeof body.password === 'string' ? body.password : '';
 
   if (!nombre) {
-    return res.status(400).json({ ok: false, error: 'El nombre es obligatorio.' });
+    return { error: 'El nombre es obligatorio.' };
   }
   if (!EMAIL_PATTERN.test(email)) {
-    return res.status(400).json({ ok: false, error: 'El email no tiene un formato válido.' });
+    return { error: 'El email no tiene un formato válido.' };
   }
   if (password.length < 8) {
-    return res.status(400).json({ ok: false, error: 'La contraseña debe tener al menos 8 caracteres.' });
+    return { error: 'La contraseña debe tener al menos 8 caracteres.' };
+  }
+  return { nombre, email, password };
+}
+
+async function registrar(req, res) {
+  const { error, nombre, email, password } = validarDatosCuenta(req.body || {});
+  if (error) {
+    return res.status(400).json({ ok: false, error });
   }
 
   try {
@@ -89,14 +101,27 @@ function logout(req, res) {
   });
 }
 
-function me(req, res) {
-  if (!req.session?.userId) {
-    return res.json({ authenticated: false });
+// Nombre y rol se leen de la colección usuarios, no de la sesión: si un admin
+// cambió el rol, /me ya devuelve el nuevo sin volver a loguearse. Si el
+// usuario ya no existe, la sesión no vale: authenticated:false.
+async function me(req, res) {
+  try {
+    if (!req.session?.userId) {
+      return res.json({ authenticated: false });
+    }
+    const usuario = await getDb()
+      .collection('usuarios')
+      .findOne({ _id: new ObjectId(req.session.userId) }, { projection: { nombre: 1, rol: 1 } });
+    if (!usuario) {
+      return res.json({ authenticated: false });
+    }
+    res.json({
+      authenticated: true,
+      usuario: { id: usuario._id, nombre: usuario.nombre, rol: usuario.rol },
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
   }
-  res.json({
-    authenticated: true,
-    usuario: { id: req.session.userId, nombre: req.session.nombre, rol: req.session.rol },
-  });
 }
 
-module.exports = { registrar, login, logout, me };
+module.exports = { registrar, login, logout, me, validarDatosCuenta };

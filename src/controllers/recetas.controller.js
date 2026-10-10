@@ -1,5 +1,6 @@
 const { ObjectId } = require('mongodb');
 const { getDb } = require('../db/connection');
+const { eliminarRecetaYDependencias } = require('./eliminaciones');
 
 const DIFICULTADES = ['facil', 'media', 'dificil'];
 const TIPOS = ['horno', 'trago', 'asado', 'olla'];
@@ -283,13 +284,7 @@ async function eliminar(req, res) {
     const receta = await buscarRecetaYVerificarAutoria(req, res);
     if (!receta) return;
 
-    const db = getDb();
-    await db.collection('opiniones').deleteMany({ recetaId: receta._id });
-    await db.collection('usuarios').updateMany(
-      { favoritos: receta._id },
-      { $pull: { favoritos: receta._id } },
-    );
-    await db.collection('recetas').deleteOne({ _id: receta._id });
+    await eliminarRecetaYDependencias(getDb(), receta);
 
     res.json({ ok: true });
   } catch (err) {

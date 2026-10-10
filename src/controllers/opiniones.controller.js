@@ -1,5 +1,6 @@
 const { ObjectId } = require('mongodb');
 const { getDb } = require('../db/connection');
+const { eliminarOpinionYActualizarPuntaje } = require('./eliminaciones');
 
 function manejarErrorEscritura(err, res) {
   if (err.code === 11000) {
@@ -154,27 +155,7 @@ async function eliminar(req, res) {
     const opinion = await buscarOpinionYVerificarPropiedad(req, res);
     if (!opinion) return;
 
-    await getDb().collection('opiniones').deleteOne({ _id: opinion._id });
-
-    await getDb().collection('recetas').updateOne({ _id: opinion.recetaId }, [
-      {
-        $set: {
-          'puntaje.suma': { $subtract: ['$puntaje.suma', opinion.estrellas] },
-          'puntaje.cantidad': { $subtract: ['$puntaje.cantidad', 1] },
-        },
-      },
-      {
-        $set: {
-          'puntaje.promedio': {
-            $cond: [
-              { $eq: ['$puntaje.cantidad', 0] },
-              0,
-              { $round: [{ $divide: ['$puntaje.suma', '$puntaje.cantidad'] }, 2] },
-            ],
-          },
-        },
-      },
-    ]);
+    await eliminarOpinionYActualizarPuntaje(getDb(), opinion);
 
     res.json({ ok: true });
   } catch (err) {

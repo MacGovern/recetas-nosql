@@ -65,9 +65,10 @@ async function pedir(metodo, url, cuerpo, { redirigir401 = true } = {}) {
 
 // opciones: { redirigir401: false } para llamadas donde un 401 es un resultado
 // esperado (login con credenciales malas, /me, /logout).
+// delete: cuerpo es opcional (moderar exige { motivo }); sin él no se manda body.
 export const api = {
   get: (url, opciones) => pedir('GET', url, undefined, opciones),
   post: (url, cuerpo = {}, opciones) => pedir('POST', url, cuerpo, opciones),
   put: (url, cuerpo = {}, opciones) => pedir('PUT', url, cuerpo, opciones),
-  delete: (url, opciones) => pedir('DELETE', url, undefined, opciones),
+  delete: (url, cuerpo, opciones) => pedir('DELETE', url, cuerpo, opciones),
 };

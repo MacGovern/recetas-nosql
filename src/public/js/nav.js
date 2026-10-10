@@ -12,13 +12,30 @@ const ITEMS = [
   { texto: 'Nueva receta', href: '/receta-form.html', roles: ['usuario', 'moderador'] },
   { texto: 'Favoritos', href: '/favoritos.html', roles: ['usuario', 'moderador'] },
   { texto: 'Agregaciones', href: '/agregaciones.html', roles: TODOS },
+  { texto: 'Usuarios', href: '/admin-usuarios.html', roles: ['admin'] },
+  { texto: 'Categorías', href: '/admin-categorias.html', roles: ['admin'] },
+  { texto: 'Moderaciones', href: '/admin-moderaciones.html', roles: ['admin'] },
   { texto: 'Ingresar', href: '/login.html', roles: ['visitante'] },
   { texto: 'Registrarse', href: '/registro.html', roles: ['visitante'] },
 ];
 
 // Páginas que exigen sesión: un visitante que entra por URL, o que cierra sesión
 // estando en ellas, es redirigido a login. B y C las agregan.
-const PAGINAS_PROTEGIDAS = ['/receta-form.html', '/favoritos.html'];
+const PAGINAS_PROTEGIDAS = [
+  '/receta-form.html',
+  '/favoritos.html',
+  '/admin-usuarios.html',
+  '/admin-categorias.html',
+  '/admin-moderaciones.html',
+];
+
+// Páginas que además exigen un rol. Con sesión pero sin el rol → a inicio.
+// Es comodidad: la barrera real es el 403 del servidor.
+const ROLES_POR_PAGINA = {
+  '/admin-usuarios.html': ['admin'],
+  '/admin-categorias.html': ['admin'],
+  '/admin-moderaciones.html': ['admin'],
+};
 
 // Roles con botón de cuenta/Salir, enumerados explícitamente.
 const ROLES_CON_SESION = ['usuario', 'moderador', 'admin'];
@@ -79,6 +96,11 @@ export async function iniciarNav() {
   const estado = await iniciar();
   if (!estado.autenticado && PAGINAS_PROTEGIDAS.includes(location.pathname)) {
     irALoginConNext();
+  } else if (estado.autenticado) {
+    const permitidos = ROLES_POR_PAGINA[location.pathname];
+    if (permitidos && !permitidos.includes(estado.usuario.rol)) {
+      location.assign('/index.html');
+    }
   }
   return estado;
 }

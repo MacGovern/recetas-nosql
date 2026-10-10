@@ -19,8 +19,18 @@ const alertas = document.getElementById('alertas');
 const contReceta = document.getElementById('receta-contenido');
 const contOpiniones = document.getElementById('opiniones-seccion');
 
+// Modal de moderación: marcado estático de receta.html, fuera de los dos contenedores
+// que se repintan con innerHTML.
+const elModal = document.getElementById('modal-moderar');
+const formModerar = document.getElementById('form-moderar');
+const tituloModerar = document.getElementById('moderar-titulo');
+const alertasModerar = document.getElementById('moderar-alertas');
+const motivoModerar = document.getElementById('moderar-motivo');
+const botonModerar = document.getElementById('moderar-confirmar');
+
 let receta = null; // documento de la consulta 2: receta + últimas 10 opiniones
 let opinionEnEdicion = null; // _id de la opinión propia que se está editando
+let moderando = null; // { tipo: 'receta' | 'opinion', id } mientras el modal está abierto
 
 // Favorito de esta receta para el usuario actual. Vive aparte de `receta`: tras cada
 // cambio solo se repinta el botón, sin volver a pedir la consulta 2.
@@ -38,6 +48,13 @@ function usuarioActual() {
 function esAutor() {
   const u = usuarioActual();
   return Boolean(u) && receta.autor._id === u.id;
+}
+
+// Solo el moderador modera (admin no hereda de él). La UI replica el conflicto de
+// interés para no ofrecer lo que el servidor rechaza con 403.
+function puedeModerar() {
+  const u = usuarioActual();
+  return Boolean(u) && u.rol === 'moderador';
 }
 
 // Solo http/https: evita que una url guardada como "javascript:..." termine en un href.
@@ -157,7 +174,11 @@ function pintarReceta() {
          <a class="btn btn-outline-primary btn-sm" href="/receta-form.html?id=${encodeURIComponent(r._id)}">Editar</a>
          <button type="button" class="btn btn-outline-danger btn-sm" data-accion="eliminar-receta">Eliminar</button>
        </div>`
-    : '';
+    : puedeModerar()
+      ? `<div class="mb-3">
+           <button type="button" class="btn btn-outline-danger btn-sm" data-accion="moderar-receta">Eliminar (moderación)</button>
+         </div>`
+      : '';
   const pasos = [...r.pasos].sort((a, b) => a.orden - b.orden);
 
   contReceta.innerHTML = `
@@ -210,7 +231,11 @@ function opinionHtml(o) {
          <button type="button" class="btn btn-link btn-sm p-0 me-3" data-accion="editar-opinion" data-id="${escapeHtml(o._id)}">Editar</button>
          <button type="button" class="btn btn-link btn-sm p-0 text-danger" data-accion="eliminar-opinion" data-id="${escapeHtml(o._id)}">Eliminar</button>
        </div>`
-    : '';
+    : puedeModerar() && !esAutor()
+      ? `<div class="mt-2">
+           <button type="button" class="btn btn-link btn-sm p-0 text-danger" data-accion="moderar-opinion" data-id="${escapeHtml(o._id)}">Eliminar (moderación)</button>
+         </div>`
+      : '';
   return `<div class="card mb-2"><div class="card-body">
     <div class="d-flex justify-content-between">
       <strong>${escapeHtml(o.usuario.nombre)}</strong>
@@ -274,6 +299,48 @@ async function accion(fn, mensajeExito) {
   }
 }
 
+function abrirModeracion(objetivo) {
+  moderando = objetivo;
+  tituloModerar.textContent = objetivo.tipo === 'receta' ? 'Eliminar receta' : 'Eliminar opinión';
+  limpiarAlerta(alertasModerar);
+  motivoModerar.value = '';
+  botonModerar.disabled = false;
+  bootstrap.Modal.getOrCreateInstance(elModal).show();
+}
+
+// No pasa por accion(): un error se muestra DENTRO del modal (abierto, con el motivo
+// escrito intacto). Solo si el borrado salió bien se cierra y se repinta la página.
+formModerar.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!moderando) return;
+  const { tipo, id: contenidoId } = moderando;
+  const ruta = tipo === 'receta' ? 'recetas' : 'opiniones';
+
+  limpiarAlerta(alertasModerar);
+  botonModerar.disabled = true;
+  try {
+    await api.delete(`/api/moderacion/${ruta}/${encodeURIComponent(contenidoId)}`, { motivo: motivoModerar.value });
+  } catch (err) {
+    mostrarError(alertasModerar, err);
+    botonModerar.disabled = false;
+    return;
+  }
+
+  bootstrap.Modal.getOrCreateInstance(elModal).hide();
+  moderando = null;
+  if (tipo === 'receta') {
+    location.assign('/index.html');
+    return;
+  }
+  limpiarAlerta(alertas);
+  try {
+    await cargar(); // vuelve a pedir la consulta 2: puntaje y lista salen del servidor
+    mostrarExito(alertas, 'Opinión eliminada.');
+  } catch (err) {
+    mostrarError(alertas, err);
+  }
+});
+
 contOpiniones.addEventListener('click', (e) => {
   const boton = e.target.closest('[data-accion]');
   if (!boton) return;
@@ -288,6 +355,8 @@ contOpiniones.addEventListener('click', (e) => {
   } else if (que === 'eliminar-opinion') {
     if (!window.confirm('¿Eliminar tu opinión?')) return;
     accion(() => api.delete(`/api/opiniones/${encodeURIComponent(opId)}`), 'Opinión eliminada.');
+  } else if (que === 'moderar-opinion') {
+    abrirModeracion({ tipo: 'opinion', id: opId });
   }
 });
 
@@ -311,6 +380,8 @@ contReceta.addEventListener('click', (e) => {
 
   if (boton.dataset.accion === 'favorito') {
     alternarFavorito();
+  } else if (boton.dataset.accion === 'moderar-receta') {
+    abrirModeracion({ tipo: 'receta', id });
   } else if (boton.dataset.accion === 'eliminar-receta') {
     if (!window.confirm('¿Eliminar esta receta y todas sus opiniones? No se puede deshacer.')) return;
     limpiarAlerta(alertas);

@@ -15,6 +15,33 @@
     <article id="receta-contenido"></article>
     <section id="opiniones-seccion" class="mt-5"></section>
   </main>
+
+  <!-- Modal de moderación. Va fuera de #receta-contenido y #opiniones-seccion: esos
+       se reescriben con innerHTML en cada repintado y se llevarían el modal. -->
+  <div class="modal fade" id="modal-moderar" tabindex="-1" aria-labelledby="moderar-titulo" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="form-moderar" novalidate>
+          <div class="modal-header">
+            <h2 class="modal-title h5" id="moderar-titulo">Eliminar contenido</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <div id="moderar-alertas"></div>
+            <label class="form-label" for="moderar-motivo">Motivo</label>
+            <textarea class="form-control" id="moderar-motivo" name="motivo" rows="3" required></textarea>
+            <div class="form-text">Obligatorio. Queda registrado en el historial de moderaciones.</div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-danger" id="moderar-confirmar">Eliminar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module" src="/js/paginas/detalle.js"></script>
 </body>
 </html>

@@ -1,10 +1,8 @@
 import { api } from '../api.js';
 import { iniciarNav } from '../nav.js';
-import { cargarCategorias, nombreCategoria } from '../categorias.js';
+import { cargarCategorias } from '../categorias.js';
 import { escapeHtml, limpiarAlerta, mostrarError } from '../ui.js';
-import {
-  etiquetaDificultad, etiquetaTipo, formatearFecha, formatearMinutos, textoPromedio,
-} from '../formato.js';
+import { tarjetaReceta } from '../tarjeta.js';
 
 const TAM_PAGINA = 12;
 const ORDENES = ['puntaje', 'fecha', 'preparacion'];
@@ -76,31 +74,6 @@ function pintarFiltroCategorias(categorias) {
     .join('');
 }
 
-function tarjeta(r) {
-  const cats = (r.categorias ?? []).map((id) => nombreCategoria(id));
-  const detalles = [
-    etiquetaDificultad(r.dificultad),
-    r.tipo ? etiquetaTipo(r.tipo) : null,
-    r.paisOrigen ?? null,
-  ].filter(Boolean);
-  const tiempos = `Prep. ${formatearMinutos(r.tiempoPreparacionMin)} · Cocción ${formatearMinutos(r.tiempoCoccionMin)}`;
-
-  return `<div class="col">
-    <div class="card h-100">
-      <div class="card-body">
-        <h2 class="h5 card-title">
-          <a class="stretched-link text-decoration-none" href="/receta.html?id=${encodeURIComponent(r._id)}">${escapeHtml(r.titulo)}</a>
-        </h2>
-        <p class="card-subtitle text-muted small mb-2">por ${escapeHtml(r.autor?.nombre)} · ${escapeHtml(formatearFecha(r.fechaPublicacion))}</p>
-        <p class="mb-1">${escapeHtml(textoPromedio(r.puntaje))}</p>
-        <p class="mb-1 small">${escapeHtml(detalles.join(' · '))}</p>
-        <p class="mb-2 small text-muted">${escapeHtml(tiempos)}</p>
-        <div>${cats.map((n) => `<span class="badge text-bg-light border me-1">${escapeHtml(n)}</span>`).join('')}</div>
-      </div>
-    </div>
-  </div>`;
-}
-
 function pintarResultados(recetas, pagina) {
   const hayMas = recetas.length > TAM_PAGINA; // se pidió una de más para saberlo sin total
   const visibles = recetas.slice(0, TAM_PAGINA);
@@ -108,7 +81,7 @@ function pintarResultados(recetas, pagina) {
   if (visibles.length === 0) {
     resultados.innerHTML = '<div class="col-12"><p class="text-muted">No hay recetas que coincidan con los filtros.</p></div>';
   } else {
-    resultados.innerHTML = visibles.map(tarjeta).join('');
+    resultados.innerHTML = visibles.map((r) => tarjetaReceta(r)).join('');
   }
 
   paginacion.hidden = pagina === 1 && !hayMas;

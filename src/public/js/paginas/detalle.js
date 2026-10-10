@@ -11,6 +11,8 @@ import {
 
 // Roles que pueden opinar (admin no hereda de usuario, así que no figura).
 const ROLES_QUE_OPINAN = ['usuario', 'moderador'];
+// Ídem para favoritos: admin no tiene favoritos (no hereda de usuario).
+const ROLES_CON_FAVORITOS = ['usuario', 'moderador'];
 
 const id = leerParam('id');
 const alertas = document.getElementById('alertas');
@@ -19,6 +21,13 @@ const contOpiniones = document.getElementById('opiniones-seccion');
 
 let receta = null; // documento de la consulta 2: receta + últimas 10 opiniones
 let opinionEnEdicion = null; // _id de la opinión propia que se está editando
+
+// Favorito de esta receta para el usuario actual. Vive aparte de `receta`: tras cada
+// cambio solo se repinta el botón, sin volver a pedir la consulta 2.
+let esFavorita = false;
+let favoritosListos = false; // false = todavía no se sabe (o falló): el botón no se muestra
+let cambiandoFavorito = false; // hay un POST/DELETE en curso
+let cargaFavoritos = 0; // descarta respuestas de un usuario que ya cerró sesión
 
 // Los ids llegan como string en el JSON y userId de la sesión también: se comparan como string.
 function usuarioActual() {
@@ -71,6 +80,67 @@ function pasoHtml(p) {
   return `<li class="mb-2">${escapeHtml(p.contenido)}${extra}</li>`;
 }
 
+// Solo roles explícitos y nunca el autor (el servidor ya lo rechaza con 403,
+// pero la UI no debe ofrecerlo). Un visitante no lo ve.
+function puedeFavoritear() {
+  const u = usuarioActual();
+  return Boolean(u) && ROLES_CON_FAVORITOS.includes(u.rol) && !esAutor();
+}
+
+function favoritoHtml() {
+  if (!favoritosListos || !puedeFavoritear()) return '';
+  const clase = esFavorita ? 'btn-warning' : 'btn-outline-warning';
+  const texto = esFavorita ? '★ En favoritos (quitar)' : '☆ Agregar a favoritos';
+  return `<div class="mb-3">
+    <button type="button" class="btn ${clase} btn-sm" data-accion="favorito" aria-pressed="${esFavorita}"${cambiandoFavorito ? ' disabled' : ''}>${texto}</button>
+  </div>`;
+}
+
+function pintarBotonFavorito() {
+  const contenedor = document.getElementById('favorito-contenedor');
+  if (contenedor) contenedor.innerHTML = favoritoHtml();
+}
+
+// No bloquea el render de la receta: se llama después de pintarla y un fallo solo
+// deja el botón oculto y muestra el error.
+async function cargarFavoritos() {
+  favoritosListos = false;
+  const mia = ++cargaFavoritos;
+  if (!receta || !puedeFavoritear()) {
+    pintarBotonFavorito();
+    return;
+  }
+  try {
+    // redirigir401: false → una sesión vencida no echa al usuario de una página pública
+    const { favoritos } = await api.get('/api/usuarios/favoritos', { redirigir401: false });
+    if (mia !== cargaFavoritos) return;
+    esFavorita = favoritos.includes(receta._id); // ambos son string
+    favoritosListos = true;
+  } catch (err) {
+    if (mia !== cargaFavoritos) return;
+    mostrarError(alertas, err);
+  }
+  pintarBotonFavorito();
+}
+
+async function alternarFavorito() {
+  if (cambiandoFavorito) return;
+  cambiandoFavorito = true;
+  limpiarAlerta(alertas);
+  pintarBotonFavorito(); // deshabilitado mientras dura el pedido
+  const url = `/api/usuarios/favoritos/${encodeURIComponent(receta._id)}`;
+  try {
+    if (esFavorita) await api.delete(url);
+    else await api.post(url);
+    esFavorita = !esFavorita;
+  } catch (err) {
+    mostrarError(alertas, err);
+  } finally {
+    cambiandoFavorito = false;
+    pintarBotonFavorito();
+  }
+}
+
 function pintarReceta() {
   const r = receta;
   const meta = [
@@ -96,6 +166,7 @@ function pintarReceta() {
     <p class="mb-2">${escapeHtml(textoPuntaje(r.puntaje))}</p>
     <div class="mb-2">${r.categorias.map((cid) => `<span class="badge text-bg-light border me-1">${escapeHtml(nombreCategoria(cid))}</span>`).join('')}</div>
     ${acciones}
+    <div id="favorito-contenedor">${favoritoHtml()}</div>
     <p class="mb-1">${escapeHtml(meta.join(' · '))}</p>
     <p class="text-muted">Preparación ${escapeHtml(formatearMinutos(r.tiempoPreparacionMin))} · Cocción ${escapeHtml(formatearMinutos(r.tiempoCoccionMin))}</p>
     ${extras ? `<dl class="row">${extras}</dl>` : ''}
@@ -235,12 +306,18 @@ contOpiniones.addEventListener('submit', (e) => {
 });
 
 contReceta.addEventListener('click', (e) => {
-  if (e.target.closest('[data-accion="eliminar-receta"]') === null) return;
-  if (!window.confirm('¿Eliminar esta receta y todas sus opiniones? No se puede deshacer.')) return;
-  limpiarAlerta(alertas);
-  api.delete(`/api/recetas/${encodeURIComponent(id)}`)
-    .then(() => location.assign('/index.html'))
-    .catch((err) => mostrarError(alertas, err));
+  const boton = e.target.closest('[data-accion]');
+  if (!boton) return;
+
+  if (boton.dataset.accion === 'favorito') {
+    alternarFavorito();
+  } else if (boton.dataset.accion === 'eliminar-receta') {
+    if (!window.confirm('¿Eliminar esta receta y todas sus opiniones? No se puede deshacer.')) return;
+    limpiarAlerta(alertas);
+    api.delete(`/api/recetas/${encodeURIComponent(id)}`)
+      .then(() => location.assign('/index.html'))
+      .catch((err) => mostrarError(alertas, err));
+  }
 });
 
 async function iniciar() {
@@ -261,7 +338,13 @@ async function iniciar() {
     mostrarError(alertas, err);
     return;
   }
-  suscribir(() => pintarTodo()); // login/logout desde la barra: se rehacen acciones y formularios
+  // login/logout desde la barra: se rehacen acciones y formularios, y se recalcula el favorito
+  suscribir(() => {
+    favoritosListos = false;
+    pintarTodo();
+    cargarFavoritos();
+  });
+  cargarFavoritos(); // después de pintar la receta: no la retrasa ni la bloquea si falla
 }
 
 iniciar();

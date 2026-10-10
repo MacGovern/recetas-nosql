@@ -10,13 +10,15 @@ const TODOS = ['visitante', 'usuario', 'moderador', 'admin'];
 const ITEMS = [
   { texto: 'Inicio', href: '/index.html', roles: TODOS },
   { texto: 'Nueva receta', href: '/receta-form.html', roles: ['usuario', 'moderador'] },
+  { texto: 'Favoritos', href: '/favoritos.html', roles: ['usuario', 'moderador'] },
+  { texto: 'Agregaciones', href: '/agregaciones.html', roles: TODOS },
   { texto: 'Ingresar', href: '/login.html', roles: ['visitante'] },
   { texto: 'Registrarse', href: '/registro.html', roles: ['visitante'] },
 ];
 
 // Páginas que exigen sesión: un visitante que entra por URL, o que cierra sesión
 // estando en ellas, es redirigido a login. B y C las agregan.
-const PAGINAS_PROTEGIDAS = ['/receta-form.html'];
+const PAGINAS_PROTEGIDAS = ['/receta-form.html', '/favoritos.html'];
 
 // Roles con botón de cuenta/Salir, enumerados explícitamente.
 const ROLES_CON_SESION = ['usuario', 'moderador', 'admin'];

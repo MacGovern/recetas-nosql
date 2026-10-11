@@ -42,20 +42,26 @@ resultados.addEventListener('click', (e) => {
   if (boton) quitar(boton);
 });
 
-await iniciarNav(); // si no hay sesión, redirige a login (ver PAGINAS_PROTEGIDAS)
+async function iniciar() {
+  const estado = await iniciarNav(); // sin sesión, redirige a login (ver PAGINAS_PROTEGIDAS)
+  // admin no tiene favoritos: no se piden categorías ni favoritos mientras nav redirige.
+  if (!(estado.autenticado && ['usuario', 'moderador'].includes(estado.usuario.rol))) return;
 
-try {
-  await cargarCategorias();
-} catch {
-  // sin catálogo las categorías se muestran como "(categoría desconocida)"
+  try {
+    await cargarCategorias();
+  } catch {
+    // sin catálogo las categorías se muestran como "(categoría desconocida)"
+  }
+
+  resultados.setAttribute('aria-busy', 'true');
+  try {
+    const { favoritos } = await api.get('/api/consultas/favoritos');
+    pintar(favoritos);
+  } catch (err) {
+    mostrarError(alertas, err);
+  } finally {
+    resultados.removeAttribute('aria-busy');
+  }
 }
 
-resultados.setAttribute('aria-busy', 'true');
-try {
-  const { favoritos } = await api.get('/api/consultas/favoritos');
-  pintar(favoritos);
-} catch (err) {
-  mostrarError(alertas, err);
-} finally {
-  resultados.removeAttribute('aria-busy');
-}
+iniciar();

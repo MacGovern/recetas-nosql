@@ -3,6 +3,7 @@ import { iniciarNav } from '../nav.js';
 import { cargarCategorias } from '../categorias.js';
 import { escapeHtml, limpiarAlerta, mostrarError } from '../ui.js';
 import { tarjetaReceta } from '../tarjeta.js';
+import { llenarSelectPaises } from '../paises.js';
 
 const TAM_PAGINA = 12;
 const ORDENES = ['puntaje', 'fecha', 'preparacion'];
@@ -26,7 +27,7 @@ function leerFiltros() {
   return {
     q: p.get('q') ?? '',
     ingredientes: p.get('ingredientes') ?? '',
-    pais: p.get('pais') ?? '',
+    pais: (p.get('pais') ?? '').toUpperCase(), // los values del select van en mayúsculas
     orden: ORDENES.includes(orden) ? orden : 'puntaje',
     categorias: (p.get('categorias') ?? '').split(',').filter(Boolean),
     pagina: Math.max(parseInt(p.get('pagina'), 10) || 1, 1),
@@ -145,6 +146,7 @@ btnSiguiente.addEventListener('click', () => {
 
 window.addEventListener('popstate', cargar);
 
+llenarSelectPaises(form.pais, 'Todos'); // antes de cargar(): aplicarAlFormulario asigna su value
 iniciarNav();
 try {
   pintarFiltroCategorias(await cargarCategorias());

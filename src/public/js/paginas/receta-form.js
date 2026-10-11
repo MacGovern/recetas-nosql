@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { iniciarNav } from '../nav.js';
 import { cargarCategorias } from '../categorias.js';
+import { CODIGOS_PAISES, llenarSelectPaises, nombrePais } from '../paises.js';
 import { leerParam, limpiarAlerta, mostrarError } from '../ui.js';
 
 // Espejo de CAMPOS_POR_TIPO en recetas.controller.js.
@@ -67,6 +68,24 @@ function mostrarBloqueTipo() {
 }
 
 campo('tipo').addEventListener('change', mostrarBloqueTipo);
+
+// ---------- País ----------
+
+// El select solo entrega códigos de la lista (o '' = sin país); el servidor sigue validando.
+llenarSelectPaises(campo('paisOrigen'), 'Sin país');
+
+// Una receta guardada con un código fuera de la lista no debe perderlo al reenviarse:
+// se agrega como opción extra (nombrePais devuelve el código tal cual).
+function seleccionarPais(codigo) {
+  const select = campo('paisOrigen');
+  if (codigo && !CODIGOS_PAISES.includes(codigo)) {
+    const extra = document.createElement('option');
+    extra.value = codigo;
+    extra.textContent = nombrePais(codigo);
+    select.appendChild(extra);
+  }
+  select.value = codigo ?? '';
+}
 
 // ---------- Categorías ----------
 
@@ -210,7 +229,7 @@ function poblar(r) {
   campo('tiempoPreparacionMin').value = r.tiempoPreparacionMin;
   campo('tiempoCoccionMin').value = r.tiempoCoccionMin;
   campo('dificultad').value = r.dificultad;
-  campo('paisOrigen').value = r.paisOrigen ?? '';
+  seleccionarPais(r.paisOrigen);
   campo('tipo').value = r.tipo ?? '';
   CAMPOS_VARIABLES.forEach((nombre) => {
     if (r[nombre] !== undefined) campo(nombre).value = r[nombre];
@@ -303,11 +322,8 @@ function armarBody() {
   };
 
   // Opcionales: vacío = se omite (no se envía ''), y el servidor lo $unsetea.
-  const pais = campo('paisOrigen').value.trim();
-  if (pais) {
-    if (!/^[A-Za-z]{2}$/.test(pais)) return { error: 'El país debe ser un código de 2 letras (por ejemplo IT).' };
-    body.paisOrigen = pais.toUpperCase();
-  }
+  const pais = campo('paisOrigen').value;
+  if (pais) body.paisOrigen = pais;
 
   const tipo = campo('tipo').value;
   if (tipo) {

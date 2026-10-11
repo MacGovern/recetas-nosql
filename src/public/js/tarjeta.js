@@ -5,6 +5,7 @@ import { escapeHtml } from './ui.js';
 import {
   etiquetaDificultad, etiquetaTipo, formatearFecha, formatearMinutos, textoPromedio,
 } from './formato.js';
+import { nombrePais } from './paises.js';
 
 // pie: HTML ya escapado por quien llama; se agrega al final del cuerpo de la tarjeta.
 // Si trae controles clicables, deben llevar `position-relative z-2`: el
@@ -14,7 +15,7 @@ export function tarjetaReceta(r, { pie = '' } = {}) {
   const detalles = [
     etiquetaDificultad(r.dificultad),
     r.tipo ? etiquetaTipo(r.tipo) : null,
-    r.paisOrigen ?? null,
+    r.paisOrigen ? nombrePais(r.paisOrigen) : null,
   ].filter(Boolean);
   const tiempos = `Prep. ${formatearMinutos(r.tiempoPreparacionMin)} · Cocción ${formatearMinutos(r.tiempoCoccionMin)}`;
 

@@ -8,6 +8,7 @@ import {
 import {
   estrellasTexto, etiquetaDificultad, etiquetaTipo, formatearFecha, formatearMinutos, textoPuntaje,
 } from '../formato.js';
+import { nombrePais } from '../paises.js';
 
 // Roles que pueden opinar (admin no hereda de usuario, así que no figura).
 const ROLES_QUE_OPINAN = ['usuario', 'moderador'];
@@ -163,7 +164,7 @@ function pintarReceta() {
   const meta = [
     etiquetaDificultad(r.dificultad),
     r.tipo ? etiquetaTipo(r.tipo) : null,
-    r.paisOrigen ?? null,
+    r.paisOrigen ? nombrePais(r.paisOrigen) : null,
     `${r.porciones} ${r.porciones === 1 ? 'porción' : 'porciones'}`,
   ].filter(Boolean);
   const extras = filaCamposTipo(r)

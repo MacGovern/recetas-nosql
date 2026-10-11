@@ -257,6 +257,7 @@ function armarBody() {
     const cantidad = decimal(fila.querySelector('.ing-cantidad').value);
     const unidad = fila.querySelector('.ing-unidad').value.trim();
     if (!nombre) return { error: `Ingrediente ${n}: falta el nombre.` };
+    if (nombre.includes(',')) return { error: `Ingrediente ${n}: el nombre no puede contener comas.` };
     if (!(cantidad >= 0)) return { error: `Ingrediente ${n}: la cantidad debe ser un número mayor o igual a 0.` };
     if (!unidad) return { error: `Ingrediente ${n}: falta la unidad.` };
 

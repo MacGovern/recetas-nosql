@@ -63,6 +63,9 @@ function validarIngrediente(ingrediente, index) {
   if (typeof ingrediente.nombre !== 'string' || !ingrediente.nombre.trim()) {
     return `El ingrediente ${index + 1} necesita "nombre".`;
   }
+  if (ingrediente.nombre.includes(',')) {
+    return `Ingrediente ${index + 1}: el nombre no puede contener comas.`;
+  }
   if (typeof ingrediente.cantidad !== 'number' || ingrediente.cantidad < 0) {
     return `El ingrediente ${index + 1} necesita "cantidad" numérica.`;
   }

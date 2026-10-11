@@ -4,7 +4,7 @@
 
 Aplicación web de recetas de cocina: se pueden publicar recetas, opinar con estrellas, guardar favoritos y consultar rankings. Se hizo como laboratorio de **Taller de Bases de Datos NoSQL** (Tecnólogo en Informática, sede LATU) para practicar el modelado y las consultas con **MongoDB**.
 
-**Grupo 2:** Leonardo Giménez, Matías Poy Vazquez, Ignacio Davrieux.
+**Grupo 2:** Leonardo Giménez, Matías Poy Vázquez, Ignacio Davrieux.
 
 Todos los comandos de este documento son de **PowerShell de Windows**. Para abrirlo: botón Inicio, escribir `PowerShell` y presionar Enter.
 

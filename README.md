@@ -71,9 +71,27 @@ El archivo `.env` queda en la raíz del proyecto, con estas variables:
 | `PORT` | Puerto en el que escucha el servidor | `3000` (si no se define, usa 3000) |
 | `SESSION_SECRET` | Texto secreto con el que se firman las cookies de sesión | Un texto largo y propio. **No tiene valor por defecto: sin esta variable el servidor no arranca.** |
 
-> **Importante:** el `SESSION_SECRET` que trae `.env.example` (`cambiar-por-un-texto-largo-y-secreto`) es **solo un ejemplo**. Sirve para probar en tu máquina, pero en cualquier entorno real hay que cambiarlo por un texto propio y no compartirlo.
+### Generar un `SESSION_SECRET` propio
 
-Para editar el archivo: `notepad .env`.
+1. Generá el texto con este comando. Imprime 64 caracteres al azar (letras de la `a` a la `f` y números); copialo entero:
+
+   ```powershell
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+
+2. Abrí el archivo `.env` con el Bloc de notas:
+
+   ```powershell
+   notepad .env
+   ```
+
+3. Reemplazá el texto de ejemplo para que la línea quede así: `SESSION_SECRET=` seguido del texto que generaste, **sin espacios ni comillas**. Por ejemplo (este es inventado, usá el tuyo): `SESSION_SECRET=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef`
+
+4. Guardá con `Ctrl + S` y cerrá el Bloc de notas.
+
+Para una prueba rápida local, el texto de ejemplo que trae `.env.example` también funciona y podés dejarlo.
+
+> **Importante:** el `SESSION_SECRET` que trae `.env.example` (`cambiar-por-un-texto-largo-y-secreto`) es **solo un ejemplo**. En cualquier entorno real hay que cambiarlo por un texto propio y no compartirlo.
 
 ## 5. Cargar los datos de prueba
 

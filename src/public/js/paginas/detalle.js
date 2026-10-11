@@ -98,11 +98,11 @@ function pasoHtml(p) {
   return `<li class="mb-2">${escapeHtml(p.contenido)}${extra}</li>`;
 }
 
-// Solo roles explícitos y nunca el autor (el servidor ya lo rechaza con 403,
-// pero la UI no debe ofrecerlo). Un visitante no lo ve.
+// Solo roles explícitos (usuario y moderador; admin no hereda). El autor también
+// puede marcar su propia receta. Un visitante no lo ve.
 function puedeFavoritear() {
   const u = usuarioActual();
-  return Boolean(u) && ROLES_CON_FAVORITOS.includes(u.rol) && !esAutor();
+  return Boolean(u) && ROLES_CON_FAVORITOS.includes(u.rol);
 }
 
 function favoritoHtml() {

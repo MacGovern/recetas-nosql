@@ -12,9 +12,6 @@ async function agregarFavorito(req, res) {
     if (!receta) {
       return res.status(404).json({ ok: false, error: 'Receta no encontrada.' });
     }
-    if (receta.autor._id.toString() === req.session.userId) {
-      return res.status(403).json({ ok: false, error: 'No podés tener en favoritos tu propia receta.' });
-    }
 
     await getDb().collection('usuarios').updateOne(
       { _id: new ObjectId(req.session.userId) },

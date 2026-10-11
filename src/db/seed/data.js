@@ -10,8 +10,6 @@ const categorias = [
   { slug: 'vegano', nombre: 'Vegano', descripcion: 'Recetas sin ningún producto de origen animal.' },
   { slug: 'sin-lactosa', nombre: 'Sin lactosa', descripcion: 'Recetas sin leche ni derivados lácteos.' },
   { slug: 'bajo-en-calorias', nombre: 'Bajo en calorías', descripcion: 'Recetas pensadas para dietas de bajo aporte calórico.' },
-  { slug: 'comida-espanola', nombre: 'Comida española', descripcion: 'Recetas tradicionales de España.' },
-  { slug: 'comida-italiana', nombre: 'Comida italiana', descripcion: 'Recetas tradicionales de Italia.' },
   { slug: 'postres', nombre: 'Postres', descripcion: 'Dulces y postres para cerrar una comida.' },
 ];
 
@@ -44,7 +42,7 @@ const recetas = [
     paisOrigen: 'IT',
     tipo: 'horno',
     temperaturaHornoC: 220,
-    categoriaSlugs: ['comida-italiana', 'vegetariano'],
+    categoriaSlugs: ['vegetariano'],
     ingredientes: [
       { nombre: 'harina 0000', cantidad: 500, unidad: 'g' },
       { nombre: 'agua', cantidad: 300, unidad: 'ml' },
@@ -80,7 +78,7 @@ const recetas = [
     paisOrigen: 'IT',
     tipo: 'horno',
     temperaturaHornoC: 200,
-    categoriaSlugs: ['comida-italiana', 'vegetariano'],
+    categoriaSlugs: ['vegetariano'],
     ingredientes: [
       { nombre: 'láminas de lasaña', cantidad: 12, unidad: 'unidad' },
       { nombre: 'zapallito', cantidad: 2, unidad: 'unidad' },
@@ -418,7 +416,7 @@ const recetas = [
     dificultad: 'media',
     paisOrigen: 'IT',
     tipo: 'olla',
-    categoriaSlugs: ['comida-italiana', 'vegetariano', 'sin-gluten'],
+    categoriaSlugs: ['vegetariano', 'sin-gluten'],
     ingredientes: [
       { nombre: 'arroz arbóreo', cantidad: 320, unidad: 'g' },
       { nombre: 'champiñones', cantidad: 300, unidad: 'g' },

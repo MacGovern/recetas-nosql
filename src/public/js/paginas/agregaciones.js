@@ -54,7 +54,7 @@ function categoriaRankingHtml(item) {
       <h3 class="h5 card-title">${escapeHtml(item.categoria.nombre)}</h3>
       <p class="mb-2 small text-muted">
         Promedio ${escapeHtml(item.promedio.toFixed(2))} ★ ·
-        ${escapeHtml(item.cantidadOpiniones)} opiniones ·
+        ${escapeHtml(item.cantidadOpiniones)} ${item.cantidadOpiniones === 1 ? 'opinión' : 'opiniones'} ·
         ${escapeHtml(item.cantidadRecetas)} ${item.cantidadRecetas === 1 ? 'receta' : 'recetas'}
       </p>
       <ol class="mb-0">${top3}</ol>
@@ -68,7 +68,7 @@ async function cargarRanking() {
     const minOpiniones = leerEntero(formRanking.minOpiniones, 'El mínimo de opiniones', { min: 1 });
     const { ranking } = await api.get(`/api/consultas/ranking-categorias?minOpiniones=${minOpiniones}`);
     resultadoRanking.innerHTML = ranking.length === 0
-      ? `<div class="col-12"><p class="text-muted">Ninguna categoría tiene recetas con al menos ${minOpiniones} opiniones.</p></div>`
+      ? `<div class="col-12"><p class="text-muted">Ninguna categoría tiene recetas con al menos ${minOpiniones} ${minOpiniones === 1 ? 'opinión' : 'opiniones'}.</p></div>`
       : ranking.map(categoriaRankingHtml).join('');
   } catch (err) {
     resultadoRanking.replaceChildren();
